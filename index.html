@@ -56,6 +56,8 @@
 
         video {
             background-color: black;
+            transform: translate3d(0,0,0); /* 启用硬件加速 */
+            will-change: transform; /* 提示浏览器提前优化 */
         }
 .caption {
     position: absolute;
