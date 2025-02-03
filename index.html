@@ -228,119 +228,126 @@
 
  <script>
     let startX, startY;
-    let currentFolderIndex = 0;
-    let currentItems = [0, 0, 0, 0, 0, 0, 0, 0];
-    const folders = document.querySelectorAll('.folder');
-    const bgms = document.querySelectorAll('.bgm');
+let currentFolderIndex = 0;
+let currentItems = [0, 0, 0, 0, 0, 0, 0, 0];
+const folders = document.querySelectorAll('.folder');
+const bgms = document.querySelectorAll('.bgm');
 
-    // 触摸开始事件
-    document.addEventListener('touchstart', e => {
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-    });
+// 触摸开始事件
+document.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+});
 
-    // 触摸结束事件
-    document.addEventListener('touchend', e => {
-        const endX = e.changedTouches[0].clientX;
-        const endY = e.changedTouches[0].clientY;
-        const deltaX = endX - startX;
-        const deltaY = endY - startY;
+// 触摸结束事件
+document.addEventListener('touchend', e => {
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
 
-        // 垂直滑动检测（上下切换文件夹）
-        if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
-            if (deltaY > 0 && currentFolderIndex > 0) {
-                // 向下滑动
-                currentFolderIndex--;
-            } else if (deltaY < 0 && currentFolderIndex < folders.length - 1) {
-                // 向上滑动
-                currentFolderIndex++;
-            }
-            updateFolders();
+    // 垂直滑动检测（上下切换文件夹）
+    if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 50) {
+        if (deltaY > 0 && currentFolderIndex > 0) {
+            // 向下滑动
+            currentFolderIndex--;
+        } else if (deltaY < 0 && currentFolderIndex < folders.length - 1) {
+            // 向上滑动
+            currentFolderIndex++;
         }
-        // 水平滑动检测（切换内容）
-        else if (Math.abs(deltaX) > 50) {
-            const folder = folders[currentFolderIndex];
-            const itemCount = folder.querySelectorAll('.item').length;
-            if (deltaX > 0 && currentItems[currentFolderIndex] > 0) {
-                // 向右滑动
-                currentItems[currentFolderIndex]--;
-            } else if (deltaX < 0 && currentItems[currentFolderIndex] < itemCount - 1) {
-                // 向左滑动
-                currentItems[currentFolderIndex]++;
-            }
-            updateCarousel(folder);
+        updateFolders();
+    }
+    // 水平滑动检测（切换内容）
+    else if (Math.abs(deltaX) > 50) {
+        const folder = folders[currentFolderIndex];
+        const itemCount = folder.querySelectorAll('.item').length;
+        if (deltaX > 0 && currentItems[currentFolderIndex] > 0) {
+            // 向右滑动
+            currentItems[currentFolderIndex]--;
+        } else if (deltaX < 0 && currentItems[currentFolderIndex] < itemCount - 1) {
+            // 向左滑动
+            currentItems[currentFolderIndex]++;
+        }
+        updateCarousel(folder);
+    }
+});
+
+// 点击暂停/播放
+document.addEventListener('click', () => {
+    const currentFolder = folders[currentFolderIndex];
+    const isPlaying = !currentFolder.querySelector('.bgm').paused;
+
+    // 切换所有媒体状态
+    currentFolder.querySelectorAll('video, audio').forEach(media => {
+        if (isPlaying) {
+            media.pause();
+        } else {
+            media.play();
         }
     });
+});
 
-    // 点击暂停/播放
-    document.addEventListener('click', () => {
-        const currentFolder = folders[currentFolderIndex];
-        const isPlaying = !currentFolder.querySelector('.bgm').paused;
+// 更新文件夹位置
+function updateFolders() {
+    folders.forEach((folder, index) => {
+        folder.style.transform = `translateY(${(index - currentFolderIndex) * 100}%)`;
 
-        // 切换所有媒体状态
-        currentFolder.querySelectorAll('video, audio').forEach(media => {
-            if (isPlaying) {
-                media.pause();
-            } else {
-                media.play();
-            }
-        });
-    });
-
-    // 更新文件夹位置
-    function updateFolders() {
-        folders.forEach((folder, index) => {
-            folder.style.transform = `translateY(${(index - currentFolderIndex) * 100}%)`;
-            // 新增：暂停非当前文件夹的视频
-            if (index !== currentFolderIndex) {
-                folder.querySelectorAll('video').forEach(video => {
-                    video.pause();
-                });
-            }
-        });
-        // Reset carousel to the first item
-        currentItems[currentFolderIndex] = 0;
-        updateCarousel(folders[currentFolderIndex]);
-
-        // 重新播放当前背景音乐
-        playCurrentBGM();
-    }
-
-    // 更新轮播位置
-    function updateCarousel(folder) {
-        const offset = -currentItems[currentFolderIndex] * 100;
-        folder.querySelector('.carousel').style.transform = `translateX(${offset}%)`;
-        playCurrentVideo();
-    }
-
-    // 播放当前背景音乐
-    function playCurrentBGM() {
-        bgms.forEach((bgm, index) => {
-            if (index === currentFolderIndex) {
-                bgm.currentTime = 0; // Reset background music to the beginning
-                bgm.play();
-            } else {
-                bgm.pause();
-            }
-        });
-    }
-
-    // 播放当前视频
-    function playCurrentVideo() {
-        const currentFolder = folders[currentFolderIndex];
-        currentFolder.querySelectorAll('video').forEach(video => {
+        // 暂停所有非当前文件夹的视频
+        folder.querySelectorAll('video').forEach(video => {
             video.pause();
         });
-        const currentVideo = currentFolder.querySelectorAll('video')[currentItems[currentFolderIndex]];
-        if (currentVideo) {
-            currentVideo.play();
-            currentVideo.muted = false;
-        }
-    }
+    });
 
-    // 初始化播放
+    // **重置当前文件夹的轮播项为第一张**
+    currentItems[currentFolderIndex] = 0;
+    updateCarousel(folders[currentFolderIndex]);
+
+    // **重新播放当前文件夹的背景音乐**
     playCurrentBGM();
+}
+
+// 更新轮播位置
+function updateCarousel(folder) {
+    const offset = -currentItems[currentFolderIndex] * 100;
+    folder.querySelector('.carousel').style.transform = `translateX(${offset}%)`;
+
+    // **确保当前文件夹的第一个视频重新播放**
     playCurrentVideo();
+}
+
+// 播放当前背景音乐
+function playCurrentBGM() {
+    bgms.forEach((bgm, index) => {
+        if (index === currentFolderIndex) {
+            bgm.currentTime = 0; // **重置背景音乐到开头**
+            bgm.play();
+        } else {
+            bgm.pause();
+        }
+    });
+}
+
+// 播放当前视频
+function playCurrentVideo() {
+    const currentFolder = folders[currentFolderIndex];
+
+    // 暂停所有视频，确保不会多个视频同时播放
+    currentFolder.querySelectorAll('video').forEach(video => {
+        video.pause();
+    });
+
+    // 获取当前轮播项的视频，并重置播放时间
+    const currentVideo = currentFolder.querySelectorAll('video')[currentItems[currentFolderIndex]];
+    if (currentVideo) {
+        currentVideo.currentTime = 0; // **重置播放时间**
+        currentVideo.play();
+        currentVideo.muted = false;
+    }
+}
+
+// **初始化播放**
+playCurrentBGM();
+playCurrentVideo();let startX, startY;
 </script>
 </body>
 </html>
